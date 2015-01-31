@@ -1,0 +1,104 @@
+/*
+  Simple way of laying out parts in a 1D (for now array).
+
+  TO DO:
+  - Create an array of parts in schematic
+  - Create an array of pads / or whatever in package editor
+  - 2D Arrays
+  - Radial arrays
+  - Better way of selecting parts?
+  
+
+  v@2000db.com
+  
+ */
+
+string help = "\n Select parts you wish to layout in array\n" +
+              "The array will start at the specified coordinates\n" +
+              "incrementing at the specified regular intervals\n" +
+
+string version = "001";
+
+string script_name;
+
+real startX = 0.0;
+real incrementX = 10;
+real startY = 0.0;
+real incrementY = 0.0;
+
+string cmd = "";
+int count = 0;
+
+void createArray() {
+    if(board)
+        board(B) {
+            script_name = "./~array.scr";
+            B.elements(E) {
+                if(ingroup(E)) {
+                    string s = "";
+                    real x, y;
+                    x = incrementX * count + startX;
+                    y = incrementY * count + startY;
+                    sprintf(s, "MOVE %s (%f %f);", E.name, x, y);
+                    cmd += s;
+                    count++;
+                }
+            }
+        }
+    return;
+}
+
+/* // Fill this via dialog box */
+
+if(argc == 6)
+{
+    startX = strtod(argv[2]);
+    startY = strtod(argv[3]);
+    incrementX = strtod(argv[4]);
+    incrementY = strtod(argv[5]);
+    createArray();
+}
+else {
+    dlgDialog("Create 1D Array")
+    {
+        dlgGroup("Array Parameters") {
+            dlgHBoxLayout {
+                dlgLabel("&X start position");
+                dlgRealEdit(startX, -1000, 1000);
+                dlgStretch(1);
+            }
+            dlgHBoxLayout {
+                dlgLabel("&Y start position");
+                dlgRealEdit(startY, -1000, 1000);
+                dlgStretch(1);
+            }
+            dlgHBoxLayout {
+                dlgLabel("&X position increment");
+                dlgRealEdit(incrementX, -100, 100);
+                dlgStretch(1);
+            }
+            dlgHBoxLayout {
+                dlgLabel("&Y position increment");
+                dlgRealEdit(incrementY, -100, 100);
+                dlgStretch(1);
+            }
+        }
+        dlgLabel(help);
+        dlgLabel("Version "+version);
+        dlgHBoxLayout {
+            dlgPushButton("+OK") 
+            {
+                createArray();
+                dlgAccept();
+            }
+            dlgPushButton("-&Cancel") exit(0);
+            dlgStretch(0);
+        }
+    };
+}
+
+/* output(script_name, "wtD") printf(cmd); // WHAAA */
+/* string s; */
+/* sprintf(s, "SCRIPT '%s'\n;", script_name); */
+exit(cmd);
+
