@@ -6,21 +6,26 @@
   - Create an array of pads / or whatever in package editor
   - 2D Arrays
   - Radial arrays
-  - Better way of selecting parts?
   
 
   v@2000db.com
   
  */
 
-string help = "\n Select parts you wish to layout in array\n" +
-              "The array will start at the specified coordinates\n" +
-              "incrementing at the specified regular intervals\n" +
+// DLG
+string help = "\nSelect parts you wish to layout in array\n" +
+    "either using a group, or calling the command\n" +
+    "with a name and lower and upper bounds (i.e. LED1 - LED10).\n" +
+    "The array will start at the specified coordinates\n" +
+    "incrementing at the specified regular intervals\n";
 
 string version = "001";
 
-string script_name;
+int isByGroup = 0;
+int isByName = 0;
 
+
+// Array
 real startX = 0.0;
 real incrementX = 10;
 real startY = 0.0;
@@ -29,12 +34,17 @@ real incrementY = 0.0;
 string cmd = "";
 int count = 0;
 
+// Part selection
+string partName = "";
+int lowerBound = 0;
+int upperBound = 0;
+
+
 void createArray() {
     if(board)
         board(B) {
-            script_name = "./~array.scr";
             B.elements(E) {
-                if(ingroup(E)) {
+                if(ingroup(E) && isByGroup) {
                     string s = "";
                     real x, y;
                     x = incrementX * count + startX;
@@ -43,12 +53,23 @@ void createArray() {
                     cmd += s;
                     count++;
                 }
+                else if(isByName) {
+                    if(strtol(strsub(E.name, strlen(partName))) >= lowerBound &&
+                       strtol(strsub(E.name, strlen(partName))) <= upperBound &&
+                       strsub(E.name, 0, strlen(partName)) == partName) {
+                        string s = "";
+                        real x, y;
+                        x = incrementX * count + startX;
+                        y = incrementY * count + startY;
+                        sprintf(s, "MOVE %s (%f %f);", E.name, x, y);
+                        cmd += s;
+                        count++;
+                    }
+                }
             }
         }
     return;
 }
-
-/* // Fill this via dialog box */
 
 if(argc == 6)
 {
@@ -61,6 +82,27 @@ if(argc == 6)
 else {
     dlgDialog("Create 1D Array")
     {
+        dlgGroup("Mode") {
+            dlgRadioButton("Select by Group", isByGroup);
+            dlgRadioButton("Select by Name", isByName);
+        }
+        dlgGroup("Name selection - use only if selecting by name") {
+            dlgHBoxLayout {
+                dlgLabel("&Part Name");
+                dlgStringEdit(partName);
+                dlgStretch(1);
+            }
+            dlgHBoxLayout {
+                dlgLabel("&Lower Limit");
+                dlgIntEdit(lowerBound);
+                dlgStretch(1);
+            }
+            dlgHBoxLayout {
+                dlgLabel("&Upper Limit");
+                dlgIntEdit(upperBound);
+                dlgStretch(1);
+            }
+        }
         dlgGroup("Array Parameters") {
             dlgHBoxLayout {
                 dlgLabel("&X start position");
@@ -97,8 +139,25 @@ else {
     };
 }
 
-/* output(script_name, "wtD") printf(cmd); // WHAAA */
-/* string s; */
-/* sprintf(s, "SCRIPT '%s'\n;", script_name); */
 exit(cmd);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
