@@ -1,0 +1,152 @@
+/*
+  Simple way of laying out parts in a 1D (for now array).
+
+  TO DO:
+  - Create an array of parts in schematic
+  - Create an array of pads / or whatever in package editor
+  - 2D Arrays
+  - Radial arrays
+  
+
+  v@2000db.com
+  
+ */
+
+// DLG
+string help = "\nSelect parts you wish to layout in array\n" +
+    "either using a group, or calling the command\n" +
+    "with a name and lower and upper bounds (i.e. LED1 - LED10).\n" +
+    "The array will start at the specified coordinates\n" +
+    "menting at the specified regular intervals\n";
+
+string version = "001";
+
+int isByGroup = 0;
+int isByName = 0;
+
+
+// Array
+real startX = 0.0;
+real startY = 0.0;
+real radius = 1.0;
+real groupSize = 0;
+real angleOffset = 0;
+
+string cmd = "";
+int count = 1;
+
+void createArray() {
+    if(groupSize == 0)
+    {
+        return;
+    }
+
+    real angleIncrement = 360.0 / groupSize;
+
+    if(board)
+        board(B) {
+            B.elements(E) {
+                if(ingroup(E)) {
+                    string s = "";
+                    sprintf(s, "MARK (%f %f);", startX, startY);
+                    cmd += s;
+                    sprintf(s, "MOVE %s (P %f %f);", E.name, radius, angleIncrement*count);
+                    cmd += s;
+                    sprintf(s, "ROTATE R%f '%s';", angleIncrement*count+angleOffset, E.name);
+                    cmd += s;
+                    count++;
+                }
+                // else if(isByName) {
+                //     if(strtol(strsub(E.name, strlen(partName))) >= lowerBound &&
+                //        strtol(strsub(E.name, strlen(partName))) <= upperBound &&
+                //        strsub(E.name, 0, strlen(partName)) == partName) {
+                //         string s = "";
+                //         real x, y;
+                //         x = incrementX * count + startX;
+                //         y = incrementY * count + startY;
+                //         sprintf(s, "MOVE %s (%f %f);", E.name, x, y);
+                //         cmd += s;
+                //         count++;
+                //     }
+                // }
+            }
+        }
+    return;
+}
+
+if(argc == 6)
+{
+    startX = strtod(argv[2]);
+    startY = strtod(argv[3]);
+    createArray();
+}
+else {
+    dlgDialog("Create 1D Array")
+    {
+        dlgGroup("Mode") {
+            dlgRadioButton("Select by Group", isByGroup);
+
+        }
+        dlgGroup("Array Parameters") {
+            dlgHBoxLayout {
+                dlgLabel("&X origin");
+                dlgRealEdit(startX, -1000, 1000);
+                dlgStretch(1);
+            }
+            dlgHBoxLayout {
+                dlgLabel("&Y origin");
+                dlgRealEdit(startY, -1000, 1000);
+                dlgStretch(1);
+            }
+            dlgHBoxLayout {
+                dlgLabel("&Radius");
+                dlgRealEdit(radius, 0, 100);
+                dlgStretch(1);
+            }
+            dlgHBoxLayout {
+                dlgLabel("&Number of items in group");
+                dlgRealEdit(groupSize, 0, 100);
+                dlgStretch(1);
+            }
+            dlgHBoxLayout {
+                dlgLabel("&Angle offset");
+                dlgRealEdit(angleOffset, 0, 360);
+                dlgStretch(1);
+            }
+        }
+        dlgLabel(help);
+        dlgLabel("Version "+version);
+        dlgHBoxLayout {
+            dlgPushButton("+OK") 
+            {
+                createArray();
+                dlgAccept();
+            }
+            dlgPushButton("-&Cancel") exit(0);
+            dlgStretch(0);
+        }
+    };
+}
+
+exit(cmd);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
